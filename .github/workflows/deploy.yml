@@ -1,0 +1,47 @@
+name: CI/CD Course Platform
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    name: Deploy via Ansible
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Ansible
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ansible
+
+      - name: Setup SSH key
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+        run: ./scripts/setup_ssh.sh
+
+      - name: Create Ansible inventory
+        run: |
+          mkdir -p ansible
+          cat > ansible/inventory.ini << EOF
+          [all]
+          ${{ secrets.SERVER_IP }} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/key.pem ansible_ssh_common_args='-o StrictHostKeyChecking=no -o ServerAliveInterval=60 -o ServerAliveCountMax=30'
+          EOF
+
+      - name: Create .env file for Ansible
+        run: |
+          echo "${{ secrets.ENV_FILE }}" > ansible/.env
+
+      - name: Run Ansible playbook
+        timeout-minutes: 60
+        run: |
+          ANSIBLE_SSH_RETRIES=5 \
+          ansible-playbook -i ansible/inventory.ini ansible/playbook.yml \
+            -e "ansible_command_timeout=3600"
