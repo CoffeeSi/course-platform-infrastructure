@@ -70,9 +70,9 @@
         dest: /opt/course-platform
         force: yes
 
-    - name: Copy .env file
-      copy:
-        src: .env
+    - name: Create .env file from GitHub Secrets Template
+      template:
+        src: templates/env.j2
         dest: /opt/course-platform/.env
         mode: '0600'
 

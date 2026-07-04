@@ -47,4 +47,5 @@ jobs:
         run: |
           ANSIBLE_SSH_RETRIES=5 \
           ansible-playbook -i ansible/inventory.ini ansible/playbook.yml \
-            -e "ansible_command_timeout=3600"
+            -e "ansible_command_timeout=3600" \
+            -e "env_content='${{ secrets.ENV_PRODUCTION }}'"
