@@ -21,6 +21,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ansible
 
+      - name: script permissions
+        run: chmod +x ./scripts/setup_ssh.sh
+
       - name: Setup SSH key
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
